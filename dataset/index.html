@@ -8,16 +8,20 @@
 </head>
 
 <body>
-<header class="header container" role="banner">
+
+<header class="header container">
   <div class="brand">
     <div class="logo">VP</div>
     <div>
       <div class="title">VIT Parking Dashboard</div>
-      <div class="kv">Edge • ESP32‑CAM • TinyML — Demo</div>
+      <div class="kv">ESP32‑CAM • TinyML • Firebase</div>
+      <div class="kv">
+        Logged in as: <strong id="roleBadge"></strong>
+      </div>
     </div>
   </div>
 
-  <nav class="nav" role="navigation">
+  <nav class="nav">
     <a href="index.html">Dashboard</a>
     <a href="about.html">About</a>
     <a href="login.html" id="logout">Logout</a>
@@ -25,11 +29,13 @@
 </header>
 
 <main class="container">
+
+  <!-- SYSTEM STATUS -->
   <section class="system-panel card">
     <div class="system-left">
       <div>
         <div style="font-weight:800">System status</div>
-        <div class="kv">Live health & connectivity</div>
+        <div class="kv">Realtime Firebase feed</div>
       </div>
 
       <div id="statusBadge" class="status-badge">
@@ -37,139 +43,122 @@
         <span id="statusText" style="font-weight:700;margin-left:6px">ONLINE</span>
       </div>
     </div>
+  </section>
 
-    <div class="controls">
-      <button class="btn ghost" id="toggleOnline">Go Offline</button>
-      <button class="btn" id="clearLog">Clear Log</button>
+  <!-- SINGLE SLOT -->
+  <section class="grid">
+    <div class="slot card">
+      <div class="meta">
+        <h4>Slot 1 — Entrance</h4>
+        <div id="slot1" class="pill vacant">Waiting for data…</div>
+      </div>
+
+      <div style="height:10px"></div>
+      <div class="small">
+        Last update: <strong id="slot1Time">--</strong>
+      </div>
+
+      <!-- ADMIN ONLY -->
+      <div class="admin-only" style="margin-top:12px;">
+        <button class="btn" id="markVacant">Mark VACANT</button>
+        <button class="btn ghost" id="markFull">Mark FULL</button>
+      </div>
     </div>
   </section>
 
-  <section class="grid" id="slotsGrid"></section>
-
+  <!-- LOG -->
   <section class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-weight:800">Activity Log</div>
-        <div class="kv">Realtime Firebase updates</div>
-      </div>
-      <div class="kv">Session: <strong id="userEmail"></strong></div>
-    </div>
-
-    <div style="height:12px"></div>
+    <div style="font-weight:800">Activity Log</div>
+    <div class="kv">Live updates from Firebase</div>
+    <div style="height:10px"></div>
     <div id="logArea" class="log"></div>
   </section>
+
 </main>
 
 <footer class="site-footer">
   Contact: neel.1251030298@vit.edu • © 2025 VIT Smart Parking Demo
 </footer>
 
-<!-- ================= FIREBASE DASHBOARD SCRIPT ================= -->
 <script type="module">
-import { db, ref, onValue, set, update } from "./firebase.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* -------- AUTH CHECK -------- */
+/* ================= AUTH ================= */
 if (localStorage.getItem("isLoggedIn") !== "true") {
   window.location.href = "login.html";
 }
-document.getElementById("userEmail").textContent =
-  localStorage.getItem("userEmail") || "demo@vit.edu";
 
-/* -------- DOM -------- */
-const slotsGrid   = document.getElementById("slotsGrid");
-const logArea     = document.getElementById("logArea");
-const statusText  = document.getElementById("statusText");
-const statusDot   = document.getElementById("statusDot");
-const toggleBtn   = document.getElementById("toggleOnline");
-const clearLogBtn = document.getElementById("clearLog");
+const USER_ROLE = localStorage.getItem("userRole");
+const USER_EMAIL = localStorage.getItem("userEmail");
 
-/* -------- HELPERS -------- */
-const now = () => new Date().toLocaleString();
-const log = (msg) => {
-  logArea.textContent =
-    `[${new Date().toLocaleTimeString()}] ${msg}\n` + logArea.textContent;
-};
+document.getElementById("roleBadge").textContent =
+  USER_ROLE === "admin" ? "ADMIN" : "VIEWER";
 
-/* -------- SYSTEM STATUS -------- */
-const systemRef = ref(db, "system/online");
-
-onValue(systemRef, snap => {
-  const online = snap.val();
-  statusText.textContent = online ? "ONLINE" : "OFFLINE";
-  statusDot.style.background = online ? "var(--success)" : "var(--danger)";
-  toggleBtn.textContent = online ? "Go Offline" : "Go Online";
-});
-
-toggleBtn.onclick = () => {
-  set(systemRef, statusText.textContent !== "ONLINE");
-  log("System status toggled");
-};
-
-/* -------- SLOT RENDER -------- */
-function slotHTML(id, s) {
-  const empty = s.status === "empty";
-  return `
-  <div class="slot card" data-id="${id}">
-    <div class="meta">
-      <h4>${s.label}</h4>
-      <div class="pill ${empty ? "vacant" : "full"}">
-        ${empty ? "VACANT" : "FULL"}
-      </div>
-    </div>
-
-    <div class="small">Last update: <strong>${s.updatedAt || "--"}</strong></div>
-
-    <div class="slot-footer">
-      <select data-action="set">
-        <option value="empty" ${empty ? "selected" : ""}>Set Empty</option>
-        <option value="two_wheeler" ${!empty ? "selected" : ""}>Set Full</option>
-      </select>
-      <button class="btn ghost" data-action="toggle">
-        ${empty ? "Mark Full" : "Mark Empty"}
-      </button>
-    </div>
-  </div>`;
-}
-
-/* -------- FIREBASE SLOT SYNC -------- */
-const slotsRef = ref(db, "slots");
-onValue(slotsRef, snap => {
-  const slots = snap.val();
-  if (!slots) return;
-  slotsGrid.innerHTML = Object.keys(slots)
-    .map(id => slotHTML(id, slots[id]))
-    .join("");
-});
-
-/* -------- SLOT UPDATE -------- */
-function updateSlot(id, status, src) {
-  update(ref(db, `slots/${id}`), {
-    status,
-    updatedAt: now()
+if (USER_ROLE !== "admin") {
+  document.querySelectorAll(".admin-only").forEach(el => {
+    el.style.display = "none";
   });
-  log(`${id} → ${status.toUpperCase()} (${src})`);
 }
 
-/* -------- EVENTS -------- */
-slotsGrid.addEventListener("change", e => {
-  if (!e.target.matches("select")) return;
-  const id = e.target.closest(".slot").dataset.id;
-  updateSlot(id, e.target.value, "manual");
-});
-
-slotsGrid.addEventListener("click", e => {
-  if (!e.target.matches("button")) return;
-  const id = e.target.closest(".slot").dataset.id;
-  const next = e.target.textContent.includes("Full") ? "two_wheeler" : "empty";
-  updateSlot(id, next, "quick-toggle");
-});
-
-clearLogBtn.onclick = () => logArea.textContent = "";
-
-document.getElementById("logout").onclick = () => {
-  localStorage.removeItem("isLoggedIn");
-  localStorage.removeItem("userEmail");
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCpWOqKcUI5kDRqF3yQAKpr0PXMiDIOQT4",
+  authDomain: "smart-parking-fb76f.firebaseapp.com",
+  databaseURL: "https://smart-parking-fb76f-default-rtdb.firebaseio.com",
+  projectId: "smart-parking-fb76f",
+  storageBucket: "smart-parking-fb76f.appspot.com",
+  messagingSenderId: "29983685068",
+  appId: "1:29983685068:web:05c37f8c3e98e6fea90569"
 };
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const slotRef = ref(db, "parking/slot1/status");
+
+/* ================= DOM ================= */
+const slotEl = document.getElementById("slot1");
+const timeEl = document.getElementById("slot1Time");
+const logEl = document.getElementById("logArea");
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+
+function log(msg) {
+  logEl.textContent =
+    `[${new Date().toLocaleTimeString()}] ${msg}\n` + logEl.textContent;
+}
+
+/* ================= LISTEN ================= */
+onValue(slotRef, snapshot => {
+  const status = snapshot.val();
+  if (!status) return;
+
+  const empty = status === "empty";
+  slotEl.textContent = empty ? "VACANT" : "FULL";
+  slotEl.className = "pill " + (empty ? "vacant" : "full");
+  timeEl.textContent = new Date().toLocaleString();
+
+  statusDot.style.background = "var(--success)";
+  statusText.textContent = "ONLINE";
+
+  log(`Slot → ${slotEl.textContent}`);
+});
+
+/* ================= ADMIN WRITE ================= */
+document.getElementById("markVacant")?.addEventListener("click", () => {
+  if (USER_ROLE === "admin") set(slotRef, "empty");
+});
+
+document.getElementById("markFull")?.addEventListener("click", () => {
+  if (USER_ROLE === "admin") set(slotRef, "two_wheeler");
+});
+
+/* ================= LOGOUT ================= */
+document.getElementById("logout").addEventListener("click", () => {
+  localStorage.clear();
+});
 </script>
+
 </body>
 </html>
+
