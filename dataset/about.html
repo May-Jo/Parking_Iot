@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About • VIT Parking Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header container" role="banner">
+    <div class="brand">
+      <div class="logo">VP</div>
+      <div>
+        <div class="title">About • VIT Parking Demo</div>
+        <div class="kv">TinyML • ESP32-CAM • Front-end Prototype</div>
+      </div>
+    </div>
+
+    <nav class="nav" role="navigation" aria-label="Main">
+      <a href="index.html">Dashboard</a>
+      <a href="about.html">About</a>
+      <a href="login.html">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card" style="margin-bottom:18px;">
+      <h3 style="margin-top:0">Project Overview</h3>
+      <p class="kv">This demo emulates a lightweight smart-parking solution where edge classification (two_wheeler / empty) runs on an ESP32-CAM and the results are shown in a polished, minimal dashboard. The demo intentionally avoids backend services — instead it shows how an embedded device’s output could be reflected in a production-ready UI.</p>
+
+      <h4>Core components</h4>
+      <ul>
+        <li><strong>Edge model:</strong> TinyML classifier (two_wheeler vs empty)</li>
+        <li><strong>Device:</strong> ESP32-CAM (simulated in the UI)</li>
+        <li><strong>Dashboard:</strong> HTML/CSS/JS with local state persistence</li>
+      </ul>
+
+      <h4>Next steps (optional)</h4>
+      <ol>
+        <li>Wire real device via WebSocket / lightweight HTTP + JSON.</li>
+        <li>Add basic authentication backed by a small server for real deployments.</li>
+        <li>Store historical metrics and analytics for usage reports.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h4 style="margin-top:0">Contact</h4>
+      <p class="kv">Neel Joglekar — <a href="mailto:neel.1251030298@vit.edu">neel.1251030298@vit.edu</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">© 2025 VIT Smart Parking Demo</footer>
+</body>
+</html>

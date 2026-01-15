@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard • VIT Parking Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+<header class="header container" role="banner">
+  <div class="brand">
+    <div class="logo">VP</div>
+    <div>
+      <div class="title">VIT Parking Dashboard</div>
+      <div class="kv">Edge • ESP32‑CAM • TinyML — Demo</div>
+    </div>
+  </div>
+
+  <nav class="nav" role="navigation">
+    <a href="index.html">Dashboard</a>
+    <a href="about.html">About</a>
+    <a href="login.html" id="logout">Logout</a>
+  </nav>
+</header>
+
+<main class="container">
+  <section class="system-panel card">
+    <div class="system-left">
+      <div>
+        <div style="font-weight:800">System status</div>
+        <div class="kv">Live health & connectivity</div>
+      </div>
+
+      <div id="statusBadge" class="status-badge">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText" style="font-weight:700;margin-left:6px">ONLINE</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn ghost" id="toggleOnline">Go Offline</button>
+      <button class="btn" id="clearLog">Clear Log</button>
+    </div>
+  </section>
+
+  <section class="grid" id="slotsGrid"></section>
+
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:800">Activity Log</div>
+        <div class="kv">Realtime Firebase updates</div>
+      </div>
+      <div class="kv">Session: <strong id="userEmail"></strong></div>
+    </div>
+
+    <div style="height:12px"></div>
+    <div id="logArea" class="log"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  Contact: neel.1251030298@vit.edu • © 2025 VIT Smart Parking Demo
+</footer>
+
+<!-- ================= FIREBASE DASHBOARD SCRIPT ================= -->
+<script type="module">
+import { db, ref, onValue, set, update } from "./firebase.js";
+
+/* -------- AUTH CHECK -------- */
+if (localStorage.getItem("isLoggedIn") !== "true") {
+  window.location.href = "login.html";
+}
+document.getElementById("userEmail").textContent =
+  localStorage.getItem("userEmail") || "demo@vit.edu";
+
+/* -------- DOM -------- */
+const slotsGrid   = document.getElementById("slotsGrid");
+const logArea     = document.getElementById("logArea");
+const statusText  = document.getElementById("statusText");
+const statusDot   = document.getElementById("statusDot");
+const toggleBtn   = document.getElementById("toggleOnline");
+const clearLogBtn = document.getElementById("clearLog");
+
+/* -------- HELPERS -------- */
+const now = () => new Date().toLocaleString();
+const log = (msg) => {
+  logArea.textContent =
+    `[${new Date().toLocaleTimeString()}] ${msg}\n` + logArea.textContent;
+};
+
+/* -------- SYSTEM STATUS -------- */
+const systemRef = ref(db, "system/online");
+
+onValue(systemRef, snap => {
+  const online = snap.val();
+  statusText.textContent = online ? "ONLINE" : "OFFLINE";
+  statusDot.style.background = online ? "var(--success)" : "var(--danger)";
+  toggleBtn.textContent = online ? "Go Offline" : "Go Online";
+});
+
+toggleBtn.onclick = () => {
+  set(systemRef, statusText.textContent !== "ONLINE");
+  log("System status toggled");
+};
+
+/* -------- SLOT RENDER -------- */
+function slotHTML(id, s) {
+  const empty = s.status === "empty";
+  return `
+  <div class="slot card" data-id="${id}">
+    <div class="meta">
+      <h4>${s.label}</h4>
+      <div class="pill ${empty ? "vacant" : "full"}">
+        ${empty ? "VACANT" : "FULL"}
+      </div>
+    </div>
+
+    <div class="small">Last update: <strong>${s.updatedAt || "--"}</strong></div>
+
+    <div class="slot-footer">
+      <select data-action="set">
+        <option value="empty" ${empty ? "selected" : ""}>Set Empty</option>
+        <option value="two_wheeler" ${!empty ? "selected" : ""}>Set Full</option>
+      </select>
+      <button class="btn ghost" data-action="toggle">
+        ${empty ? "Mark Full" : "Mark Empty"}
+      </button>
+    </div>
+  </div>`;
+}
+
+/* -------- FIREBASE SLOT SYNC -------- */
+const slotsRef = ref(db, "slots");
+onValue(slotsRef, snap => {
+  const slots = snap.val();
+  if (!slots) return;
+  slotsGrid.innerHTML = Object.keys(slots)
+    .map(id => slotHTML(id, slots[id]))
+    .join("");
+});
+
+/* -------- SLOT UPDATE -------- */
+function updateSlot(id, status, src) {
+  update(ref(db, `slots/${id}`), {
+    status,
+    updatedAt: now()
+  });
+  log(`${id} → ${status.toUpperCase()} (${src})`);
+}
+
+/* -------- EVENTS -------- */
+slotsGrid.addEventListener("change", e => {
+  if (!e.target.matches("select")) return;
+  const id = e.target.closest(".slot").dataset.id;
+  updateSlot(id, e.target.value, "manual");
+});
+
+slotsGrid.addEventListener("click", e => {
+  if (!e.target.matches("button")) return;
+  const id = e.target.closest(".slot").dataset.id;
+  const next = e.target.textContent.includes("Full") ? "two_wheeler" : "empty";
+  updateSlot(id, next, "quick-toggle");
+});
+
+clearLogBtn.onclick = () => logArea.textContent = "";
+
+document.getElementById("logout").onclick = () => {
+  localStorage.removeItem("isLoggedIn");
+  localStorage.removeItem("userEmail");
+};
+</script>
+</body>
+</html>

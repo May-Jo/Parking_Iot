@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login • VIT Parking Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header container" role="banner">
+    <div class="brand">
+      <div class="logo">VP</div>
+      <div>
+        <div class="title">VIT Parking Demo</div>
+        <div class="kv">Professional IoT front-end</div>
+      </div>
+    </div>
+
+    <nav class="nav" role="navigation" aria-label="Main">
+      <a href="index.html">Dashboard</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="auth-wrap">
+      <div class="auth-brand">
+        <div class="logo">VP</div>
+        <div>
+          <div style="font-weight:800;font-size:18px;">Sign in</div>
+          <div class="kv">Restricted to @vit.edu for this demo</div>
+        </div>
+      </div>
+
+      <div class="card auth-card">
+        <label class="kv" for="email">Institution email</label>
+        <input id="email" type="email" placeholder="you@vit.edu" autocomplete="email" />
+
+        <div style="height:12px;"></div>
+
+        <label class="kv" for="password">Password</label>
+        <input id="password" type="password" placeholder="Enter a password (demo only)" />
+
+        <div style="height:16px;"></div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn" id="signIn">Sign in</button>
+          <button class="btn ghost" id="demoUser">Use demo</button>
+        </div>
+
+        <div style="height:14px;"></div>
+        <p id="error" class="kv" style="color:#b00020; min-height:16px;"></p>
+
+        <hr style="margin:18px 0; border:none; border-top:1px solid rgba(16,18,20,0.04)" />
+
+        <div class="kv">Why localStorage?</div>
+        <p class="kv">No backend required for the demo. Login flag is stored locally so the dashboard can authenticate the session.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">© 2025 VIT Smart Parking Demo</footer>
+
+  <script>
+    // Modern, safe, small auth util
+    (function(){
+      const signIn = document.getElementById('signIn');
+      const demoUser = document.getElementById('demoUser');
+      const emailEl = document.getElementById('email');
+      const pwEl = document.getElementById('password');
+      const err = document.getElementById('error');
+
+      function setLogged(email){
+        // Only save minimal info
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', email || 'demo@vit.edu');
+        // Navigate to dashboard
+        window.location.href = 'index.html';
+      }
+
+      signIn.addEventListener('click', () => {
+        err.textContent = '';
+        const email = (emailEl.value || '').trim().toLowerCase();
+        const password = pwEl.value || '';
+        if(!email || !password){
+          err.textContent = 'Please enter email and password.';
+          return;
+        }
+        if(!email.endsWith('@vit.edu')){
+          err.textContent = 'Access restricted to @vit.edu addresses.';
+          return;
+        }
+        // Minimal validation passed
+        setLogged(email);
+      });
+
+      demoUser.addEventListener('click', () => {
+        // Friendly demo credentials
+        emailEl.value = 'demo@vit.edu';
+        pwEl.value = 'demo';
+        setTimeout(() => setLogged('demo@vit.edu'), 220);
+      });
+
+      // If already logged in, redirect
+      if(localStorage.getItem('isLoggedIn') === 'true'){
+        window.location.href = 'index.html';
+      }
+    })();
+  </script>
+</body>
+</html>
