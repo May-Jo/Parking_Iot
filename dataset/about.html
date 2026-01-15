@@ -6,49 +6,147 @@
   <title>About • VIT Parking Demo</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <header class="header container" role="banner">
-    <div class="brand">
-      <div class="logo">VP</div>
-      <div>
-        <div class="title">About • VIT Parking Demo</div>
-        <div class="kv">TinyML • ESP32-CAM • Front-end Prototype</div>
-      </div>
+
+<header class="header container">
+  <div class="brand">
+    <div class="logo">VP</div>
+    <div>
+      <div class="title">VIT Smart Parking</div>
+      <div class="kv">ESP32‑CAM • TinyML • Firebase</div>
     </div>
+  </div>
 
-    <nav class="nav" role="navigation" aria-label="Main">
-      <a href="index.html">Dashboard</a>
-      <a href="about.html">About</a>
-      <a href="login.html">Logout</a>
-    </nav>
-  </header>
+  <nav class="nav">
+    <a href="about.html" class="active">About</a>
+    <a href="login.html">Login</a>
+  </nav>
+</header>
 
-  <main class="container">
-    <section class="card" style="margin-bottom:18px;">
-      <h3 style="margin-top:0">Project Overview</h3>
-      <p class="kv">This demo emulates a lightweight smart-parking solution where edge classification (two_wheeler / empty) runs on an ESP32-CAM and the results are shown in a polished, minimal dashboard. The demo intentionally avoids backend services — instead it shows how an embedded device’s output could be reflected in a production-ready UI.</p>
+<main class="container">
 
-      <h4>Core components</h4>
-      <ul>
-        <li><strong>Edge model:</strong> TinyML classifier (two_wheeler vs empty)</li>
-        <li><strong>Device:</strong> ESP32-CAM (simulated in the UI)</li>
-        <li><strong>Dashboard:</strong> HTML/CSS/JS with local state persistence</li>
-      </ul>
+<!-- HERO -->
+<section class="card" style="display:grid; grid-template-columns:1.2fr 1fr; gap:24px; align-items:center;">
+  <div>
+    <h2 style="margin-bottom:6px;">About the Project</h2>
+    <p class="kv">
+      A real‑time smart parking detection system built using
+      <strong>Edge AI (TinyML)</strong> on <strong>ESP32‑CAM</strong>,
+      synchronized live to a <strong>Firebase‑powered web dashboard</strong>.
+    </p>
 
-      <h4>Next steps (optional)</h4>
-      <ol>
-        <li>Wire real device via WebSocket / lightweight HTTP + JSON.</li>
-        <li>Add basic authentication backed by a small server for real deployments.</li>
-        <li>Store historical metrics and analytics for usage reports.</li>
-      </ol>
-    </section>
+    <p class="kv">
+      This project demonstrates how low‑power embedded devices can perform
+      on‑device intelligence and stream meaningful data to the cloud with
+      minimal latency.
+    </p>
+  </div>
 
-    <section class="card">
-      <h4 style="margin-top:0">Contact</h4>
-      <p class="kv">Neel Joglekar — <a href="mailto:neel.1251030298@vit.edu">neel.1251030298@vit.edu</a></p>
-    </section>
-  </main>
+  <!-- 📸 PROJECT / TEAM PHOTO -->
+   <!-- 👥 TEAM SLIDER -->
+<div class="team-slider card">
 
-  <footer class="site-footer">© 2025 VIT Smart Parking Demo</footer>
+  <button class="slider-btn left" id="prevBtn">‹</button>
+
+  <div class="team-card">
+
+    <img id="memberImg" src="assets/member1.jpg" alt="Team Member">
+
+    <!-- YOU CAN EDIT TEXT BELOW LATER -->
+    <h4 id="memberName">Member Name</h4>
+    <p id="memberRole" class="kv">
+      Role & contribution description goes here
+    </p>
+
+  </div>
+
+  <button class="slider-btn right" id="nextBtn">›</button>
+
+</div>
+
+ 
+</section>
+
+<!-- TECHNOLOGY STACK -->
+<section class="card">
+  <h3>Technology Stack</h3>
+  <ul class="kv" style="line-height:1.8;">
+    <li><strong>ESP32‑CAM:</strong> Edge device for image capture</li>
+    <li><strong>TinyML (Edge Impulse):</strong> On‑device vehicle detection</li>
+    <li><strong>Firebase Realtime Database:</strong> Live data sync</li>
+    <li><strong>HTML, CSS, JavaScript:</strong> Frontend dashboard</li>
+    <li><strong>GitHub Pages:</strong> Static hosting</li>
+  </ul>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="card">
+  <h3>How It Works</h3>
+  <ol class="kv" style="line-height:1.8;">
+    <li>ESP32‑CAM captures parking slot images</li>
+    <li>TinyML model classifies <em>VACANT</em> or <em>FULL</em></li>
+    <li>Status is sent to Firebase in real time</li>
+    <li>Dashboard updates instantly for users</li>
+    <li>Admins can manually override if needed</li>
+  </ol>
+</section>
+
+<!-- TEAM -->
+<section class="card">
+  <h3>Team & Contact</h3>
+  <p class="kv">
+    Developed as a smart IoT solution for campus parking management.
+  </p>
+
+  <p class="kv">
+    📧 Contact:
+    <a href="mailto:mayank.1251030175@vit.edu">mayank.1251030175@vit.edu</a>
+  </p>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  © 2025 VIT Smart Parking Demo • Built by FY G6 AIML C
+</footer>
+
+<script>
+const members = [
+  { img: "assets/member1.jpg", name: "Amol Ladhe Sir", role: "Guiding and Mentorship" },
+  { img: "assets/member2.jpg", name: "Mayank Joshi", role: "Web Development and Integration" },
+  { img: "assets/member3.jpg", name: "Neel Joglekar", role: "Cloud Development" },
+  { img: "assets/member4.jpg", name: "Niranjan Kachare", role: "Hardware Setup" },
+  { img: "assets/member5.jpg", name: "Vedhasa Kakade", role: "ML Model Training" },
+  { img: "assets/member6.jpg", name: "Atharvaa Jorwekar", role: "Arduino Setup" }
+];
+
+let index = 0;
+
+const imgEl = document.getElementById("memberImg");
+const nameEl = document.getElementById("memberName");
+const roleEl = document.getElementById("memberRole");
+
+function updateCard() {
+  imgEl.src = members[index].img;
+  nameEl.textContent = members[index].name;
+  roleEl.textContent = members[index].role;
+}
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  index = (index + 1) % members.length;
+  updateCard();
+});
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  index = (index - 1 + members.length) % members.length;
+  updateCard();
+});
+
+updateCard();
+</script>
+
+
 </body>
 </html>
+
