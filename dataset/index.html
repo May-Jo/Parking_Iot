@@ -34,6 +34,11 @@
 
   <!-- SYSTEM STATUS -->
   <section class="system-panel card">
+    <!-- ADMIN SYSTEM CONTROL -->
+    <div class="admin-only" style="margin-top:10px;">
+    <button class="btn ghost" id="toggleSystem">Go Offline</button>
+    </div>
+
     <div class="system-left">
       <div>
         <div style="font-weight:800">System status</div>
@@ -114,6 +119,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const slotRef = ref(db, "parking/slot1");
+const systemRef = ref(db, "parking/system");
+
 
 /* ---------- DOM ---------- */
 const slotEl = document.getElementById("slot1");
@@ -145,9 +152,27 @@ onValue(slotRef, snapshot => {
   log(`Slot → ${status}`);
 });
 
+onValue(systemRef, snapshot => {
+  const data = snapshot.val();
+  if (!data) return;
+
+  if (data.online) {
+    statusText.textContent = "ONLINE";
+    statusDot.style.background = "var(--success)";
+    document.getElementById("toggleSystem").textContent = "Go Offline";
+  } else {
+    statusText.textContent = "OFFLINE";
+    statusDot.style.background = "var(--danger)";
+    document.getElementById("toggleSystem").textContent = "Go Online";
+  }
+});
+
+
 
 
 /* ---------- ADMIN CONTROLS ---------- */
+
+
 document.getElementById("markVacant")?.addEventListener("click", () => {
   if (USER_ROLE !== "admin") return;
   update(slotRef, {
@@ -163,6 +188,20 @@ document.getElementById("markFull")?.addEventListener("click", () => {
     timestamp: Date.now()
   });
 });
+/* ---------- ADMIN SYSTEM TOGGLE ---------- */
+document.getElementById("toggleSystem")?.addEventListener("click", () => {
+  if (USER_ROLE !== "admin") return;
+
+  onValue(systemRef, snap => {
+    const current = snap.val()?.online ?? true;
+
+    update(systemRef, {
+      online: !current,
+      updatedAt: Date.now()
+    });
+  }, { onlyOnce: true });
+});
+
 
 /* ---------- LOGOUT ---------- */
 document.getElementById("logout").addEventListener("click", () => {
